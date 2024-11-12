@@ -24,3 +24,4 @@ with open('finance21.csv','a', newline='') as f:
     writer.writerow(["Name","Last Name","Door Number"]) # Creates a Row
     writer.writerow([fname, lname, Door_num])
 
+

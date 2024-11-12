@@ -1,0 +1,148 @@
+START Program
+
+DEFINE logbook AS empty list
+DEFINE user_income AS 0
+
+FUNCTION writeSpc(string, eol ```
+="")
+    FOR each character IN string
+        PRINT character WITH delay
+    END FOR
+    PRINT eol
+
+FUNCTION write(string, eol="\n")
+    FOR each character IN string
+        PRINT character WITH delay
+    END FOR
+    PRINT eol
+
+FUNCTION endscreeen()
+    SET msg TO "Exiting"
+    REPEAT 5 TIMES
+        APPEND "." TO msg
+        PRINT msg
+        WAIT 1 second
+        CLEAR screen
+    END REPEAT
+
+FUNCTION loading()
+    SET msg TO "Gathering your data."
+    REPEAT 5 TIMES
+        APPEND "." TO msg
+        PRINT msg
+        WAIT 1 second
+        CLEAR screen
+    END REPEAT
+
+FUNCTION expenses()
+    WHILE True
+        PROMPT user FOR expense amount
+        IF user input is 'q' THEN
+            BREAK
+        END IF
+        TRY
+            CONVERT user input TO float AS amount
+        EXCEPT ValueError
+            PRINT "Invalid amount. Please enter a valid number."
+            CONTINUE
+        END TRY
+
+        PROMPT user FOR category
+        IF category is valid THEN
+            ADD {'amount': amount, 'category': category_name} TO logbook
+            PRINT confirmation message
+        ELSE IF category is "E" THEN
+            PROMPT user FOR new category name
+            ADD {'amount': amount, 'category': new_category} TO logbook
+            PRINT confirmation message
+        ELSE
+            PRINT "Invalid choice. Please select a valid category."
+        END IF
+    END WHILE
+
+FUNCTION budget(user_income)
+    TRY
+        CONVERT user_income TO float AS user_income_float
+    EXCEPT ValueError
+        PRINT "Invalid income. Please enter a valid number."
+        RETURN
+
+    SET total TO SUM of amounts in logbook
+    SET budgetRem TO user_income_float - total
+
+    WAIT 1 second
+    CALL loading()
+
+    PRINT remaining budget and summary
+    IF budgetRem < 0 THEN
+        PRINT "You're over budget."
+    ELSE
+        SET savingsRec TO budgetRem * 0.5
+        PRINT savings recommendation
+    END IF
+
+    PRINT expense breakdown by category
+
+FUNCTION menu()
+    WHILE True
+        PROMPT user FOR menu choice
+        IF choice is "1" THEN
+            CALL expenses()
+        ELSE IF choice is "2" THEN
+            CALL budget(user_income)
+        ELSE IF choice is "3" OR choice is "E" THEN
+            CALL endscreeen()
+            BREAK
+        ELSE
+            PRINT "Invalid choice"
+        END IF
+    END WHILE
+
+CLASS Start
+    FUNCTION __init__()
+        INITIALIZE users AS empty dictionary
+
+    FUNCTION signup()
+        PRINT welcome message
+        PROMPT user FOR name and email
+        WHILE True
+            PROMPT user FOR password and confirmation
+            IF password matches THEN
+                BREAK
+            ELSE
+                PRINT "Passwords do not match!"
+            END IF
+        END WHILE
+        GENERATE user ID
+        SAVE user data to CSV files
+        PRINT success message
+        CALL loading()
+        CALL login()
+
+    FUNCTION login()
+        PRINT welcome message
+        PROMPT user FOR name and user ID
+        TRY
+            OPEN user transaction file
+            READ user data
+            IF credentials match THEN
+                PRINT welcome message
+                RETURN
+            END IF
+        EXCEPT FileNotFoundError
+            PRINT "File does not exist."
+            RETURN
+        END TRY
+        PRINT "Login failed!"
+
+IF __name__ == "__main__":
+    CREATE instance of Start
+    PRINT welcome message
+    PROMPT user for existing account
+    IF user has account THEN
+        CALL login()
+        PROMPT user for income
+        CALL menu()
+    ELSE
+        CALL signup()
+END Program

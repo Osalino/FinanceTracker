@@ -13,7 +13,7 @@ class Start:
     def __init__(self):
         self.users = {}
 
-    def singup(self):
+    def signup(self):
 
         print("Welcome to the personal expense tracker X")
         print("Made by: [Osazemen]\n ")

@@ -6,15 +6,14 @@ import sys
 import time
 from time import sleep
 
+from src.test.locate import user_id
+
 logbook = []
 user_income = 0
+from datetime import datetime
 
-
-x = datetime.datetime.now()
-
-# Print the current date and time
-current_time = x.strftime("%d-%m-%y %H:%M:%S")
-
+# Now you can use datetime.now() directly
+current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 def writeSpc(str, eol=""):
     for char in str:
@@ -41,6 +40,7 @@ def endscreeen():
         print(msg)
         sleep(1)
         os.system("cls")
+    return False
 
 
 def loading():
@@ -52,7 +52,7 @@ def loading():
         sleep(1)
         os.system("cls")
 
-def expenses():
+def expenses(user_id):
     while True:
         print("[?]Enter an expense (or 'q' to finish): £")
         user_exp = input()
@@ -93,6 +93,19 @@ def expenses():
             print(f"[^]Your {new_category} expense of £{amount:.2f} has been recorded.")
         else:
             print("[!]Invalid choice. Please select a valid category.")
+            log_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../transaction_record/logs/'))
+            log_filename = os.path.join(log_dir, f"{user_id}logs_transactions.csv")
+            os.makedirs(os.path.dirname(log_filename), exist_ok=True)
+            # Define the log filename
+
+            # Write the expense to the CSV file
+            with open(log_filename, mode='a', newline='') as f:
+                writer = csv.writer(f)
+                # Write header only if the file is empty
+                if f.tell() == 0:
+                    writer.writerow(["Amount", "Category"])  # Write header
+                writer.writerow([amount, logbook[-1]['category']])  # Write user data
+
 
 
 def budget(user_income):
@@ -134,6 +147,7 @@ def budget(user_income):
 
 def menu():
     while True:  # Will continously keep showing the menu until the user chooses to exit it.
+
         choice = input("""
     ----                               ---- 
 
@@ -145,7 +159,7 @@ def menu():
     """)
 
         if choice == "1":
-            expenses()
+            expenses(user_id)
         elif choice == "2":
             budget(user_income)
         elif choice.lower() == "3" or choice.lower() == "e":
@@ -163,41 +177,42 @@ class Start:
 
         print("Welcome to the personal expense tracker X")
         print("Made by: [Osazemen]\n ")
-
         name = input("Enter your name: ")
         email = input("Enter email address: ")
-        password = input("Enter password: ")
-        conf_password = input("Confirm password: ")
 
+        while True:
+            password = input("Enter password: ")
+            conf_password = input("Confirm password: ")
+            if password == conf_password:
+                break  # Exit the loop if passwords match
+            else:
+                print("Passwords do not match! Please try again.")
         sleep(1)
 
+        user_id = f"{random.randint(0, 999):03d}"
+
+        print(f"Here's your user ID: {user_id}, you will need it to log back in")
+        base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../transaction_record/logs/'))
+        tranc_filename = os.path.join(base_dir, f"{user_id}_transactions.csv")
+        os.makedirs(os.path.dirname(tranc_filename), exist_ok=True)
+
+        with open(tranc_filename, mode='a', newline='') as f:
+            writer = csv.writer(f)
+            writer.writerow(["User ID", "Name"])  # Write header
+            writer.writerow([user_id, name])  # Write user data
+
+        # current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+
+        with open('database.csv', mode='a', newline='') as f:
+            writer = csv.writer(f)
+            writer.writerow(["User ID", "Name", "Email", "Password", "Date Created"])  # Write header
+            writer.writerow([user_id, name, email, password, current_time])  # Write user data
+        print("You have registered successfully!")
         loading()
+        print("\n")
+        self.login()
 
-        if password == conf_password:
-            user_id = f"{random.randint(0, 999):03d}"
-            print(f"Heres you user ID: {user_id}, you will need it to log back in")
-
-            # tranc_filename = f"../data/users/{user_id}_transactions.csv"
-
-            base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../transaction_record/logs/'))
-            tranc_filename = os.path.join(base_dir, f"{user_id}_transactions.csv")
-
-            os.makedirs(os.path.dirname(tranc_filename), exist_ok=True)
-
-            with open(tranc_filename, mode='a', newline='') as f:
-                writer = csv.writer(f)
-                writer.writerow(["Transaction ID", "name"])  # Write email and hashed password
-                writer.writerow([user_id, name])  # Write email and hashed password
-
-            with open('database.csv', mode='a', newline='') as f:
-                writer = csv.writer(f)
-                writer.writerow(["Transaction ID", "Name", "Email", "Password", "Date Created"])  # Write email and password
-                writer.writerow([user_id, name, email, password, current_time])
-
-            print("You have registered successfully!")
-            self.login()
-        else:
-            print("Passwords do not match!")
 
     def login(self):
         print("Welcome to your personal expense tracker X")
@@ -211,32 +226,34 @@ class Start:
         abs_file_path = os.path.join(script_dir, rel_path)
 
         # login_filename = f'..\\users\\{log_ID.zfill(3)}_transactions.csv'
-        #
+
 
         # print(f"Trying to open file: {login_filename}")
-        print(f"Trying to open file: {abs_file_path}")
+        # print(f"Trying to open file: {abs_file_path}")
 
         try:
             # with open(login_filename, mode='r') as f:
             with open(abs_file_path, mode='r') as f:
                 reader = csv.reader(f)
                 for row in reader:
-                    print(row)
                     if row:
                         user_id, name = row
                         if lg_name == name and log_ID == user_id:
                             print(f"Welcome {name} you have logged in successfully!")
                             sleep(1)
                             print("\n")
-                            return
+                            menu()
+                            break
+
+
 
         except FileNotFoundError:
             # print(f"[!] The file {login_filename} does not exist.")
-            print(f"[!] The file {abs_file_path} does not exist.")
-            return None
+            print(f"[!] The user {log_ID} does not exist.")
 
-        print("Login failed! Invalid name or user ID.")
-        return None
+            print("[!]Login failed! Invalid name or user ID.")
+            print("\n")
+            return False
 
 
 if __name__ == "__main__":
@@ -244,19 +261,25 @@ if __name__ == "__main__":
     print("Welcome to the personal expense tracker X")
     print("Made by: [Osazemen]\n ")
 
+    user_income = input("[?] How much do you earn monthly: £ ")
+
     sleep(1)
+    while True:  # Loop until the user successfully logs in or chooses to create an account
+        op = input("[~]Do you already have an existing account (e to exit) : ").upper()
 
-    op = input("Do you have an existing account: ").upper()
+        while op not in ["YES", "NO","E"]:
+            op = input("Please answer with 'Yes' or 'No': ").upper()
 
-    while op != "YES" and op != "NO":
-        op = input("Please answer with 'Yes' or 'No': ").upper()
-    if op == "YES":
-        print("[#] Let's get you logged in")
-        start.login()
-        writeSpc("[?]How much do you earn monthly:  ")
-        user_income = input("£ ")
-        menu()
-
-    elif op == "NO":
-        print("[#] Let's create you an account")
-        start.signup()
+        if op == "YES":
+            print("\n")
+            print("[#] Let's get you logged in")
+            if start.login():  # If login is successful
+                break  # Exit the loop after successful login
+        elif op == "NO":
+            print("\n")
+            print("[#] Let's create you an account")
+            start.signup()
+            print("\n")
+        elif op == "E":
+            break
+        break
