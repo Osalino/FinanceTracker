@@ -40,7 +40,7 @@ def endscreeen():
         print(msg)
         sleep(1)
         os.system("cls")
-    return False
+    quit()
 
 
 def loading():
@@ -93,8 +93,8 @@ def expenses(user_id):
             print(f"[^]Your {new_category} expense of £{amount:.2f} has been recorded.")
         else:
             print("[!]Invalid choice. Please select a valid category.")
-            log_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../transaction_record/logs/'))
-            log_filename = os.path.join(log_dir, f"{user_id}logs_transactions.csv")
+            log_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../transaction_record/logs/expense/'))
+            log_filename = os.path.join(log_dir, f"{user_id}expenses.csv")
             os.makedirs(os.path.dirname(log_filename), exist_ok=True)
             # Define the log filename
 
@@ -105,6 +105,19 @@ def expenses(user_id):
                 if f.tell() == 0:
                     writer.writerow(["Amount", "Category"])  # Write header
                 writer.writerow([amount, logbook[-1]['category']])  # Write user data
+
+                # Log the expense to the user-specific CSV file
+                log_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../transaction_record/logs/'))
+                expense_filename = os.path.join(log_dir, f"{user_id}_expensetrck.csv")
+                os.makedirs(os.path.dirname(expense_filename), exist_ok=True)
+
+                # Write the expense to the CSV file
+                with open(expense_filename, mode='a', newline='') as f:
+                    writer = csv.writer(f)
+                    # Write header only if the file is empty
+                    if f.tell() == 0:
+                        writer.writerow(["Amount", "Category"])  # Write header
+                    writer.writerow([amount, logbook[-1]['category']])  # Write user data
 
 
 
@@ -213,47 +226,38 @@ class Start:
         print("\n")
         self.login()
 
-
     def login(self):
-        print("Welcome to your personal expense tracker X")
-        print("Made by: [Osazemen]\n ")
+        print("")
+        while True:
+            lg_name = input("[!] Please enter your name: ")
+            log_ID = input("[!] Please enter your user ID: ")
+            script_dir = os.path.dirname(__file__)  # Absolute dir the script is in
+            rel_path = f"..\\transaction_record\\logs\\{log_ID.zfill(3)}_transactions.csv"
+            abs_file_path = os.path.join(script_dir, rel_path)
 
-        lg_name = input("[!] Please enter your name: ")
-        log_ID = input("[!] Please enter your user ID: ")
+            try:
+                with open(abs_file_path, mode='r') as f:
+                    reader = csv.reader(f)
+                    user_found = False  # Flag to check if user is found
+                    for row in reader:
+                        if row:
+                            user_id, name = row
+                            if lg_name == name and log_ID == user_id:
+                                print(f"Welcome {name}, you have logged in successfully!")
+                                sleep(1)
+                                print("\n")
+                                menu()
+                                user_found = True  # User found, break out of the loop
+                                break
+                    if not user_found:
+                        print("[!]Login failed! Invalid name or user ID.")
+                        print("[!] Please try again.\n")  # Prompt to try again
+            except FileNotFoundError:
+                print(f"[!] The user {log_ID} does not exist.")
+                print("[!] Login failed! Invalid name or user ID.")
+                print("[!] Please try again.\n")  # Prompt to try again
+                break
 
-        script_dir = os.path.dirname(__file__)  # <-- absolute dir the script is in
-        rel_path = f"..\\transaction_record\\logs\\{log_ID.zfill(3)}_transactions.csv"
-        abs_file_path = os.path.join(script_dir, rel_path)
-
-        # login_filename = f'..\\users\\{log_ID.zfill(3)}_transactions.csv'
-
-
-        # print(f"Trying to open file: {login_filename}")
-        # print(f"Trying to open file: {abs_file_path}")
-
-        try:
-            # with open(login_filename, mode='r') as f:
-            with open(abs_file_path, mode='r') as f:
-                reader = csv.reader(f)
-                for row in reader:
-                    if row:
-                        user_id, name = row
-                        if lg_name == name and log_ID == user_id:
-                            print(f"Welcome {name} you have logged in successfully!")
-                            sleep(1)
-                            print("\n")
-                            menu()
-                            break
-
-
-
-        except FileNotFoundError:
-            # print(f"[!] The file {login_filename} does not exist.")
-            print(f"[!] The user {log_ID} does not exist.")
-
-            print("[!]Login failed! Invalid name or user ID.")
-            print("\n")
-            return False
 
 
 if __name__ == "__main__":
@@ -262,8 +266,8 @@ if __name__ == "__main__":
     print("Made by: [Osazemen]\n ")
 
     user_income = input("[?] How much do you earn monthly: £ ")
-
     sleep(1)
+
     while True:  # Loop until the user successfully logs in or chooses to create an account
         op = input("[~]Do you already have an existing account (e to exit) : ").upper()
 
