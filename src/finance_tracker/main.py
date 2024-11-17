@@ -4,6 +4,7 @@ import random
 import datetime
 import sys
 import time
+# from dis import log_ID
 from time import sleep
 
 from src.test.locate import user_id
@@ -52,72 +53,61 @@ def loading():
         sleep(1)
         os.system("cls")
 
-def expenses(user_id):
+
+def expenses(log_ID):  # Change parameter to log_ID
+    # global new_category
     while True:
-        print("[?]Enter an expense (or 'q' to finish): £")
+        print("[?] Enter an expense (or 'q' to finish): £")
         user_exp = input()
 
+
         if user_exp.lower() == 'q':
-            break  # Breaks the loop if the user is done entering expenses
-
+            break
         try:
-            amount = float(user_exp)  # Convert user input to float
+            amount = float(user_exp)
         except ValueError:
-            print("[!]Invalid amount. Please enter a valid number.")
-            continue  # it will skip to the next part if input is invalid
-
-        category = input(f"""[~~]What category would that be:
+            print("[!] Invalid amount. Please enter a valid number.")
+            continue  #
+        category = input(f"""[~~] What category would that be:
             -------                                        -----
-
                             [A.] Food
                             [B.] Utilities
                             [C.] Transport
                             [D.] Entertainment
                             [E.] Add another category
-
            -------                                        -----
                             """).capitalize()
 
         if category in ["A", "B", "C", "D"]:
+
             category_name = {
                 "A": "Food",
                 "B": "Utilities",
                 "C": "Transport",
                 "D": "Entertainment"
             }[category]
-            logbook.append({'amount': amount, 'category': category_name})  # Store amount as a number
-            print(f"[^]Your {category_name} expense of £{amount:.2f} has been recorded.")
+            logbook.append({'amount': amount, 'category': category_name})
+            print(f"[^] Your {category_name} expense of £{amount:.2f} has been recorded.")
         elif category == "E":
             new_category = input("Enter category name: ")
             logbook.append({'amount': amount, 'category': new_category})
-            print(f"[^]Your {new_category} expense of £{amount:.2f} has been recorded.")
+            print(f"[^] Your {new_category} expense of £{amount:.2f} has been recorded.")
         else:
-            print("[!]Invalid choice. Please select a valid category.")
-            log_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../transaction_record/logs/expense/'))
-            log_filename = os.path.join(log_dir, f"{user_id}expenses.csv")
-            os.makedirs(os.path.dirname(log_filename), exist_ok=True)
-            # Define the log filename
+            print("[!] Invalid choice. Please select a valid category.")
+            continue  # Skip to the next iteration
 
-            # Write the expense to the CSV file
-            with open(log_filename, mode='a', newline='') as f:
-                writer = csv.writer(f)
-                # Write header only if the file is empty
-                if f.tell() == 0:
-                    writer.writerow(["Amount", "Category"])  # Write header
-                writer.writerow([amount, logbook[-1]['category']])  # Write user data
 
-                # Log the expense to the user-specific CSV file
-                log_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../transaction_record/logs/'))
-                expense_filename = os.path.join(log_dir, f"{user_id}_expensetrck.csv")
-                os.makedirs(os.path.dirname(expense_filename), exist_ok=True)
+        # Write the expense to the CSV file
 
-                # Write the expense to the CSV file
-                with open(expense_filename, mode='a', newline='') as f:
-                    writer = csv.writer(f)
-                    # Write header only if the file is empty
-                    if f.tell() == 0:
-                        writer.writerow(["Amount", "Category"])  # Write header
-                    writer.writerow([amount, logbook[-1]['category']])  # Write user data
+        with open('user-expenses.csv', mode='a', newline='') as f:
+            writer = csv.writer(f)
+
+            if f.tell() == 0:
+                writer.writerow(["log ID", "amount", "category", "Additional category"])
+            if category == "E":
+                writer.writerow([log_ID, amount, new_category, ""])
+            else:
+                writer.writerow([log_ID, amount, category_name, ""])
 
 
 
@@ -158,7 +148,7 @@ def budget(user_income):
         print(f"{category}: £{total:.2f}")
 
 
-def menu():
+def menu(name_id):
     while True:  # Will continously keep showing the menu until the user chooses to exit it.
 
         choice = input("""
@@ -172,7 +162,7 @@ def menu():
     """)
 
         if choice == "1":
-            expenses(user_id)
+            expenses(name_id)
         elif choice == "2":
             budget(user_income)
         elif choice.lower() == "3" or choice.lower() == "e":
@@ -181,13 +171,10 @@ def menu():
         else:
             write("[!]Invalid choice")
 
-
 class Start:
     def __init__(self):
         self.users = {}
-
     def signup(self):
-
         print("Welcome to the personal expense tracker X")
         print("Made by: [Osazemen]\n ")
         name = input("Enter your name: ")
@@ -202,6 +189,7 @@ class Start:
                 print("Passwords do not match! Please try again.")
         sleep(1)
 
+
         user_id = f"{random.randint(0, 999):03d}"
 
         print(f"Here's your user ID: {user_id}, you will need it to log back in")
@@ -211,16 +199,16 @@ class Start:
 
         with open(tranc_filename, mode='a', newline='') as f:
             writer = csv.writer(f)
-            writer.writerow(["User ID", "Name"])  # Write header
+            # writer.writerow(["User ID", "Name"])  # Write header
             writer.writerow([user_id, name])  # Write user data
 
-        # current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 
         with open('database.csv', mode='a', newline='') as f:
             writer = csv.writer(f)
-            writer.writerow(["User ID", "Name", "Email", "Password", "Date Created"])  # Write header
-            writer.writerow([user_id, name, email, password, current_time])  # Write user data
+            writer.writerow(["User ID", "Name", "Email", "Password", "Date Created", "Income"])  # Write header
+            writer.writerow([user_id, name, email, password, current_time, user_income])  # Write user data
         print("You have registered successfully!")
         loading()
         print("\n")
@@ -230,7 +218,7 @@ class Start:
         print("")
         while True:
             lg_name = input("[!] Please enter your name: ")
-            log_ID = input("[!] Please enter your user ID: ")
+            log_ID = input("[!] Please enter your user ID: ")  # Store log_ID
             script_dir = os.path.dirname(__file__)  # Absolute dir the script is in
             rel_path = f"..\\transaction_record\\logs\\{log_ID.zfill(3)}_transactions.csv"
             abs_file_path = os.path.join(script_dir, rel_path)
@@ -246,16 +234,18 @@ class Start:
                                 print(f"Welcome {name}, you have logged in successfully!")
                                 sleep(1)
                                 print("\n")
-                                menu()
+                                menu(log_ID)  # Pass log_ID to the menu
                                 user_found = True  # User found, break out of the loop
                                 break
+
                     if not user_found:
-                        print("[!]Login failed! Invalid name or user ID.")
+                        print("[!] Login failed! Invalid name or user ID.")
                         print("[!] Please try again.\n")  # Prompt to try again
             except FileNotFoundError:
                 print(f"[!] The user {log_ID} does not exist.")
                 print("[!] Login failed! Invalid name or user ID.")
                 print("[!] Please try again.\n")  # Prompt to try again
+                self.login()
                 break
 
 
